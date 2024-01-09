@@ -1,59 +1,58 @@
 using UnityEngine;
+using System;
 
 public class PlayerMovement : MonoBehaviour
 {
+    private float horizontalInput;
     public float moveSpeed;
-    public float jumpForce;
+    private bool isFacingRight = false;
+    public float jumpPower;
+    private bool isGrounded = false;
 
-    private bool isJumping;
-    private bool isGrounded;
-
-    public Transform groundCheckLeft;
-    public Transform groundCheckRight;
     public Rigidbody2D rb;
     public Animator animator;
-    public SpriteRenderer spriteRenderer;
-    private Vector3 velocity = Vector3.zero;
 
-    private void FixedUpdate()
+    void Start()
     {
-        isGrounded = Physics2D.OverlapArea(groundCheckLeft.position, groundCheckRight.position);
+        rb = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
+    }
 
-        float horizontalMovement = Input.GetAxis("Horizontal") * moveSpeed * Time.deltaTime;
+    void Update()
+    {
+        horizontalInput = Input.GetAxis("Horizontal");
+
+        FlipSprite();
 
         if (Input.GetButtonDown("Jump") && isGrounded)
         {
-            isJumping = true;
-        }
-
-        MovePlayer(horizontalMovement);
-
-        Flip(rb.velocity.x);
-
-        float characterVelocity = Mathf.Abs(rb.velocity.x);
-        animator.SetFloat("Speed", characterVelocity);
-    }
-
-    void MovePlayer(float _horizontalMovement)
-    {
-        Vector3 targetVelocity = new Vector2(_horizontalMovement, rb.velocity.y);
-        rb.velocity = Vector3.SmoothDamp(rb.velocity, targetVelocity, ref velocity, .05f);
-
-        if(isJumping == true)
-        {
-            rb.AddForce(new Vector2(0f, jumpForce));    
-            isJumping = false;
+            rb.velocity = new Vector2(rb.velocity.x, jumpPower);
+            isGrounded = false;
+            animator.SetBool("isJumping", !isGrounded);
         }
     }
 
-    void Flip(float _velocity)
+    private void FixedUpdate()
     {
-        if(_velocity > 0.1f)
+        rb.velocity = new Vector2(horizontalInput * moveSpeed, rb.velocity.y);
+        animator.SetFloat("xVelocity", Math.Abs(rb.velocity.x));
+        animator.SetFloat("yVelocity",rb.velocity.y);
+    }
+
+    void FlipSprite()
+    {
+        if(isFacingRight && horizontalInput < 0f || !isFacingRight && horizontalInput > 0f)
         {
-            spriteRenderer.flipX = false;
-        } else if (_velocity < -0.1f)
-        {
-            spriteRenderer.flipX = true;
+            isFacingRight = !isFacingRight;
+            Vector3 ls = transform.localScale;
+            ls.x *= -1f;
+            transform.localScale = ls;
         }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        isGrounded = true;
+        animator.SetBool("isJumping", !isGrounded);
     }
 }

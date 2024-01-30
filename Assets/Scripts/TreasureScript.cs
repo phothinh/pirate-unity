@@ -8,6 +8,9 @@ public class TreasureScript : MonoBehaviour
 
     public TextMeshProUGUI playerRemainingText;
     public GameObject victoryCanvas;
+    public AudioClip victorySound;
+    private AudioSource audioSource;
+    public AudioSource backgroundMusic;
 
     private void OnEnable()
     {
@@ -25,6 +28,7 @@ public class TreasureScript : MonoBehaviour
 
     private void Start()
     {
+        audioSource = GetComponent<AudioSource>();
         UpdatePlayerRemainingText();
     }
 
@@ -71,11 +75,21 @@ public class TreasureScript : MonoBehaviour
 
     private void HandleVictory()
     {
+        if (backgroundMusic != null)
+        {
+            backgroundMusic.Stop();
+        }
+
         Time.timeScale = 0f;
 
         if (victoryCanvas != null)
         {
             victoryCanvas.SetActive(true);
+        }
+
+        if (victorySound != null)
+        {
+            audioSource.PlayOneShot(victorySound);
         }
     }
 }
